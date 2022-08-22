@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 import time
-from test import test_nms
+from test_model import test_nms
 from model.utils.bbox_transform import bbox_iou
 from config.config import cfg
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     import os
     from data import pascal
     from model.faster_rcnn import FasterRCNN
-    from test import init_model
+    from test_model import init_model
     
 
     # define evaluation dataset

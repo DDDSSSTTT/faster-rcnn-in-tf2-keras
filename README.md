@@ -78,12 +78,12 @@ If you start the training first time, it will take some time to set up the datas
 ### 3.2 Test and Demo
 - Test with VOC2007 `test` dataset:
     ```shell
-    python test.py -i voc07_test
+    python test_model.py -i voc07_test
     ```
 - Test with self defined images:
   Put your images under `demo/images`
   ```shell
-  python test.py -i demo
+  python test_model.py -i demo
   ```
 - Optional arguments
   - `--unpop`: run test without popping up result images as a new window
