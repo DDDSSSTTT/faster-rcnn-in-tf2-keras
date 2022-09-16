@@ -9,18 +9,27 @@ from .dataset import Dataset
 
 
 class pascal_voc(Dataset):
-    def __init__(self, is_training=True, use_diff=False):
+    def __init__(self, dir_name='chess_voc', cls_name='_classes.txt', is_training=True, use_diff=False):
         self.is_training = is_training
         self.root_path = os.path.dirname(os.path.abspath(__file__))
-        self.data_path = os.path.join(self.root_path, 'VOCdevkit', 'VOC2007')
-        self._classes = ('__background__',  # always index 0
-                        'aeroplane', 'bicycle', 'bird', 'boat',
-                        'bottle', 'bus', 'car', 'cat', 'chair',
-                        'cow', 'diningtable', 'dog', 'horse',
-                        'motorbike', 'person', 'pottedplant',
-                        'sheep', 'sofa', 'train', 'tvmonitor')
+        # self.data_path = os.path.join(self.root_path, 'VOCdevkit', 'VOC2007')
+        self.dir_name = dir_name
+        self.data_path = os.path.join(self.root_path, dir_name)
+        self.cls_path = os.path.join(self.root_path, dir_name, cls_name)
+        self._classes = ['__background__']
+        with open(self.cls_path) as f:
+            for x in f.readlines():
+                self._classes.append(x.strip('\n'))
+        self._classes = tuple(self._classes)
+        # self._classes = ('__background__',  # always index 0
+        #                 'aeroplane', 'bicycle', 'bird', 'boat',
+        #                 'bottle', 'bus', 'car', 'cat', 'chair',
+        #                 'cow', 'diningtable', 'dog', 'horse',
+        #                 'motorbike', 'person', 'pottedplant',
+        #                 'sheep', 'sofa', 'train', 'tvmonitor')
         self.num_classes = len(self._classes)
-        self.image_set_index = self._load_image_set_index()
+        # self.image_set_index = self._load_image_set_index()
+        self.image_set_index = self._automatically_generate_image_index()
         self.use_diff = use_diff
         if self.is_training:
             self.is_shuffle = cfg.shuffle
@@ -30,6 +39,18 @@ class pascal_voc(Dataset):
             self.is_shuffle = False
             self.gt_roidb, self.data_size= self._get_gt_roidb()
         
+    def _automatically_generate_image_index(self):
+        if self.is_training:
+            # use trainval set to train
+            image_dir = os.path.join(self.data_path, 'train')
+        else:
+            image_dir = os.path.join(self.data_path, 'test')
+        files = os.listdir(image_dir)
+        image_index = []
+        for each_file_name in files:
+            if each_file_name.endswith('.jpg'):
+                image_index.append(each_file_name.rstrip(".jpg"))
+        return image_index
 
     def _load_image_set_index(self):
         """
@@ -56,7 +77,10 @@ class pascal_voc(Dataset):
         """
         Return the absolute path of image with index.
         """
-        image_path = os.path.join(self.data_path, 'JPEGImages', index + '.jpg')
+        if self.is_training:
+            image_path = os.path.join(self.data_path, 'train', index + '.jpg')
+        else:
+            image_path = os.path.join(self.data_path, 'test', index + '.jpg')
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
         return image_path
     
@@ -76,7 +100,11 @@ class pascal_voc(Dataset):
           gt_overlaps: the overlap with corresponding cls's box is  1.0
           flipped: flip flag, seg_areas: the quantity of box area.
         """
-        filename = os.path.join(self.data_path, 'Annotations', index + '.xml')
+        if self.is_training:
+            filename = os.path.join(self.data_path, 'train', index + '.xml')
+        else:
+            filename = os.path.join(self.data_path, 'test', index + '.xml')
+
         tree = ET.parse(filename)
         objs = tree.findall('object')
         size = tree.findall('size')
@@ -137,14 +165,14 @@ class pascal_voc(Dataset):
                 os.makedirs(cache_path)
             if self.is_training:
                 if self.use_diff:
-                    cache_pkl = os.path.join(cache_path, 'voc_07_train' + '_diff' + '_gt_roidb.pkl')
+                    cache_pkl = os.path.join(cache_path, self.dir_name+'_train' + '_diff' + '_gt_roidb.pkl')
                 else:
-                    cache_pkl = os.path.join(cache_path, 'voc_07_train' + '_gt_roidb.pkl')
+                    cache_pkl = os.path.join(cache_path, self.dir_name+'_train' + '_gt_roidb.pkl')
             else:
                 if self.use_diff:
-                    cache_pkl = os.path.join(cache_path, 'voc_07_test' + '_diff' + '_gt_roidb.pkl')
+                    cache_pkl = os.path.join(cache_path, self.dir_name+'_test' + '_diff' + '_gt_roidb.pkl')
                 else:
-                    cache_pkl = os.path.join(cache_path, 'voc_07_test' + '_gt_roidb.pkl')
+                    cache_pkl = os.path.join(cache_path, self.dir_name+'_test' + '_gt_roidb.pkl')
             
             if not os.path.exists(cache_pkl):
                 gt_roidb = [self._load_pascal_annotation(i) for i in self.image_set_index]
