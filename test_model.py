@@ -153,6 +153,11 @@ if __name__ == '__main__':
         
         if args.input_data == 'voc07_test':
             view(img_input['img_path'], bboxes, labels=labels, scores=probs, pop_up=args.unpop)
+        elif args.input_data == 'custom':
+            from data import pascal_custom
+            custom_test_ds = pascal_custom.pascal_voc(is_training=False, use_diff=False)
+            view(imgs_path[i], bboxes, labels=labels, scores=probs,
+                 pop_up=args.unpop, save=args.save, label_tuple=custom_test_ds._classes)
         else:
             view(imgs_path[i], bboxes, labels=labels, scores=probs,
                  pop_up=args.unpop, save=args.save)        

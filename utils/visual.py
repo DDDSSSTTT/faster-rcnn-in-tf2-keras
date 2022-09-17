@@ -12,7 +12,7 @@ label_name = ('__background__',  # always index 0
 color = [np.random.random(size=3) * 256 for i in range(21)]
 
 
-def view(img_path, bboxs, labels=None, scores=None, pop_up=True, save=False):
+def view(img_path, bboxs, labels=None, scores=None, pop_up=True, save=False, label_tuple=label_name):
     # sanity check
     if labels is not None and not len(bboxs) == len(labels):
         raise ValueError('The length of label must be same as that of bbox')
