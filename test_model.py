@@ -3,12 +3,13 @@ import numpy as np
 import cv2
 import os
 from data import pascal
+from data import pascal_custom
 from model.faster_rcnn import FasterRCNN
 from config.config import cfg
-from model.utils.nms.cpu_nms import cpu_nms
+# from model.utils.nms.cpu_nms import cpu_nms
 # Though pure python nms is slightly slower then cython implementation,
 # still ~2 times faster then tf.image.non_max_suppression
-# from model.utils.nms.py_cpu_nms import cpu_nms
+from model.utils.nms.py_cpu_nms import cpu_nms
 from utils.visual import view
 import argparse
 
@@ -126,6 +127,13 @@ if __name__ == '__main__':
         # initialize the model
         model = FasterRCNN(is_training=False)
         model(init_model())
+    elif args.input_data == 'custom':
+        print("load custom image")
+        ds, imgs_path = _load_image_from_folder()
+        num_classes = pascal_custom.pascal_voc().num_classes
+        model = FasterRCNN(is_training=False)
+        model(init_model())
+
     else:
         raise NameError("Please define input images with voc07_test or demo.")
     

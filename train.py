@@ -1,4 +1,5 @@
 from data import pascal
+from data import pascal_custom
 import tensorflow as tf
 from model.faster_rcnn import FasterRCNN
 import os
@@ -49,6 +50,8 @@ if __name__ == '__main__':
     # define dataset
     ds = pascal.pascal_voc(is_training=True, use_diff=False)
     eval_ds = pascal.pascal_voc(is_training=False, use_diff=False)
+    ds_chess = pascal_custom.pascal_voc(is_training=True, use_diff=False)
+    eval_ds_chess = pascal_custom.pascal_voc(is_training=False, use_diff=False)
     # construct a tiny dataset for sanity check
     sanity_sample = np.array(ds.get_small_dataset(30))
 
@@ -93,8 +96,8 @@ if __name__ == '__main__':
     for epoch in range(1, args.max_epoch + 1, 1):
         total_loss = rpn_cls_l = rpn_bbox_l = roi_cls_l = roi_bbox_l = 0.0
             
-        for i, _input in enumerate(ds):
-            
+        # for i, _input in enumerate(ds):
+        for i, _input in enumerate(ds_chess):
             with tf.GradientTape() as tape:   
                 rpn_cls_loss, rpn_bbox_loss, roi_cls_loss, roi_bbox_loss = model(_input)
                 loss = rpn_cls_loss + rpn_bbox_loss + roi_cls_loss  + roi_bbox_loss
@@ -136,20 +139,22 @@ if __name__ == '__main__':
                 total_loss = rpn_cls_l = rpn_bbox_l = roi_cls_l = roi_bbox_l = 0.0
         
             # calculate ap here twice an epoch
-            if i == ds.data_size / 2 or i == ds.data_size - 1:
-                ap ,mAP = voc_eval(eval_ds, model, ds.num_classes)
+            # if i == ds.data_size / 2 or i == ds.data_size - 1:
+            if i == ds_chess.data_size / 2 or i == ds_chess.data_size - 1:
+                # ap ,mAP = voc_eval(eval_ds, model, ds.num_classes)
+                ap, mAP = voc_eval(eval_ds_chess, model, ds_chess.num_classes)
                 with mAP_summary_writer.as_default():
                     tf.summary.scalar('mAP', mAP, step=(epoch - 1) * 2 + i // 5000)
                 print(f'ap = {ap}, mAP = {mAP}')
         
         # record variables and gradients every epoch
         if cfg.record_all: 
-                    with kernel_summary_writer.as_default():
-                        for v in model.trainable_variables:
-                            tf.summary.histogram(v.name, v, step=s)
-                    with gradient_summary_writer.as_default():
-                        for g, v in zip(grads, model.trainable_variables):
-                            tf.summary.histogram(v.name, g, step=s)
+            with kernel_summary_writer.as_default():
+                for v in model.trainable_variables:
+                    tf.summary.histogram(v.name, v, step=s)
+            with gradient_summary_writer.as_default():
+                for g, v in zip(grads, model.trainable_variables):
+                    tf.summary.histogram(v.name, g, step=s)
         
         # Train for 70kiterations and learning rate is reduced after 50k iterations.
         if epoch == 5:
