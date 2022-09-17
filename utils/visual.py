@@ -32,7 +32,7 @@ def view(img_path, bboxs, labels=None, scores=None, pop_up=True, save=False, lab
         bottom_right = int(box[2]), int(box[3])
 
         # generate bbox's caption
-        caption = f'{label_name[labels[i]]}: {scores[i] * 100:.1f}%'
+        caption = f'{label_tuple[labels[i]]}: {scores[i] * 100:.1f}%'
         (w, h), _ = cv2.getTextSize(caption, caption_font, caption_size, caption_thickness)
         # caption_left = box[0], int(box[1] - h)
         # caption_right = int(box[0] + w), box[1]
