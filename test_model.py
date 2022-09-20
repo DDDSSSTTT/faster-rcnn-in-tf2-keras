@@ -141,7 +141,7 @@ if __name__ == '__main__':
     if args.input_data != 'custom':
         model.load_weights(_get_weight_path())
     else:
-        model.load_weights('faster_rcnn_custom.h5')
+        model.load_weights(_get_weight_path(name='faster_rcnn_custom.h5'))
     print("************************** load weights succrssfully! **************************")
     
     # inference

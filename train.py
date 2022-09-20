@@ -163,5 +163,5 @@ if __name__ == '__main__':
             # optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
         
         # save the weight on the 7th epoch
-        if epoch == 7:
+        if epoch == 7 or epoch == args.max_epoch:
             model.save_weights(ckpt_path + "/faster_rcnn_custom.h5")
