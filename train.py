@@ -164,4 +164,4 @@ if __name__ == '__main__':
         
         # save the weight on the 7th epoch
         if epoch == 7:
-            model.save_weights(ckpt_path + "/faster_rcnn.h5")
+            model.save_weights(ckpt_path + "/faster_rcnn_custom.h5")

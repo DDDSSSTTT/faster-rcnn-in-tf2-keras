@@ -73,13 +73,15 @@ def init_model():
     
     return img_input
 
-def _get_weight_path():
+def _get_weight_path(name=None):
     """locate model weights"""
     root_path = os.path.dirname(os.path.abspath(__file__))
     ckpt_path = os.path.join(root_path, 'model', 'ckpt')
     file_name = os.listdir(ckpt_path)
-    
-    return os.path.join(ckpt_path, file_name[0])
+    if name== None:
+        return os.path.join(ckpt_path, file_name[0])
+    else:
+        return os.path.join(ckpt_path, name)
 
 def test_nms(cls_prob, bboxes, score_thresh=cfg.score_threshold):
     # cls_prob: (300, 21), bboxes(300, 21, 4)
@@ -136,8 +138,10 @@ if __name__ == '__main__':
 
     else:
         raise NameError("Please define input images with voc07_test or demo.")
-    
-    model.load_weights(_get_weight_path())
+    if args.input_data != 'custom':
+        model.load_weights(_get_weight_path())
+    else:
+        model.load_weights('faster_rcnn_custom.h5')
     print("************************** load weights succrssfully! **************************")
     
     # inference
