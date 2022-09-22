@@ -15,4 +15,5 @@
 **/data/cache/*
 **/tools/demo.jpg
 **/model/ckpt/*.h5
+**/model/logs/*
 
