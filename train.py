@@ -76,6 +76,7 @@ if __name__ == '__main__':
         # best_loss = float(file_name[0].split('_')[-2])
         
         model.load_weights(best_path)
+        model.save("frcnn_custom")
         print("successfully loaded {} from disk.".format(file_name[0]))
     else:
         best_path = ''

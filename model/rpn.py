@@ -51,7 +51,7 @@ class RPN(tf.keras.Model):
         # for calculating losses
         self.rpn_cls_score = 0
         self.rpn_bbox_pred = 0
-        
+
     def call(self, feature_map, img_size, gt_boxes=None, gt_cls=None):
         """
         Call method for RPN model.
@@ -74,17 +74,17 @@ class RPN(tf.keras.Model):
         - rpn_labels: tf.int, labels of anchors, shape=(n, h, w, num_anchors, 1)
         - rpn_bbox_targets: tf.float, shape=(n, h, w, num_anchors, 4)
         """
-        
+
         (anchors, rpn_cls_prob, self.rpn_cls_score,
          self.rpn_bbox_pred, h, w) = self.rpn_body(feature_map)
         
         if self.is_training:
             # anchors_to_target
-            rpn_labels, rpn_bbox_targets = anchor_to_target(h, w, self.num_anchors, 
+            rpn_labels, rpn_bbox_targets = anchor_to_target(h, w, self.num_anchors,
                                                             gt_boxes, anchors, img_size)
             
             # rpn_labels, rpn_bbox_targets = tf.py_function(func=anchor_to_target,
-            #                                               inp=[h, w, self.num_anchors, 
+            #                                               inp=[h, w, self.num_anchors,
             #                                                    gt_boxes, anchors, img_size],
             #                                               Tout=[tf.float32, tf.float32])
             rpn_labels = tf.stop_gradient(rpn_labels)
@@ -98,7 +98,7 @@ class RPN(tf.keras.Model):
             
             # rois, roi_bbox_targets, roi_gt_labels = tf.py_function(func=proposal_to_target,
             #                                                        inp=[rois, gt_boxes, gt_cls],
-            #                                                        Tout=[tf.float32, tf.float32, tf.float32])   
+            #                                                        Tout=[tf.float32, tf.float32, tf.float32])
             roi_bbox_targets = tf.stop_gradient(roi_bbox_targets)
             roi_gt_labels = tf.stop_gradient(roi_gt_labels)
             

@@ -14,4 +14,5 @@
 **/data/chess_voc/*
 **/data/cache/*
 **/tools/demo.jpg
+**/model/ckpt/*.h5
 

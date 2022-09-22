@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 from config.config import cfg
 from model.utils.bbox_transform import bbox_iou, bbox2delta
 
@@ -19,8 +20,10 @@ def anchor_to_target(h, w, num_anchors, gt_boxes, anchors, img_size):
     - rpn_labels: np.int, labels of anchors, (positive=1, negative=0, ignore=-1), shape=(n, h, w, num_anchors, 1)
     - rpn_bbox_targets: np.float, shape=(n, h, w, num_anchors, 4)
     """
-    
+
+    print("Eagerly", tf.executing_eagerly())
     img_h, img_w = img_size.numpy()
+    # img_h2, img_w2 = tf.make_ndarray(img_size)
     gt_boxes = gt_boxes.numpy()
     anchors = anchors.numpy()
     A = anchors.shape[0] # ~16000-20000
