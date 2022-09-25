@@ -162,6 +162,11 @@ if __name__ == '__main__':
             custom_test_ds = pascal_custom.pascal_voc(is_training=False, use_diff=False)
             view(imgs_path[i], bboxes, labels=labels, scores=probs,
                  pop_up=args.unpop, save=args.save, label_tuple=custom_test_ds._classes)
+        elif args.input_data == 'non_voc':
+            from data import pascal_custom
+            custom_test_ds = pascal_custom.non_voc_txts(is_training=False, use_diff=False)
+            view(imgs_path[i], bboxes, labels=labels, scores=probs,
+                 pop_up=args.unpop, save=args.save, label_tuple=custom_test_ds._classes)
         else:
             view(imgs_path[i], bboxes, labels=labels, scores=probs,
                  pop_up=args.unpop, save=args.save)        
