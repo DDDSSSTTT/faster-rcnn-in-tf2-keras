@@ -384,7 +384,8 @@ class non_voc_txts(pascal_voc):
         for ix, obj in enumerate(objs):
             digits = obj.split(',')
             x1, y1, x2, y2, cls_idx = digits
-            x1, y1, x2, y2, cls_idx = float(x1), float(y1), float(x2), float(y2), int(cls_idx)
+            # use "int(cls_idx)+1" cuz label '__background__' is taken into consideration
+            x1, y1, x2, y2, cls_idx = float(x1), float(y1), float(x2), float(y2), int(cls_idx)+1
             boxes[ix, :] = [x1, y1, x2, y2]
             gt_classes[ix] = cls_idx
             overlaps[ix, cls_idx] = 1.0

@@ -142,7 +142,7 @@ if __name__ == '__main__':
         model = FasterRCNN(is_training=False)
         model(init_model())
     else:
-        raise NameError("Please define input images with voc07_test or demo.")
+        raise NameError("Please define input images with voc07_test, demo, custom or non-voc.")
     if args.input_data not in ['custom', 'non-voc']:
         model.load_weights(_get_weight_path())
     else:
