@@ -135,10 +135,15 @@ if __name__ == '__main__':
         num_classes = pascal_custom.pascal_voc().num_classes
         model = FasterRCNN(is_training=False)
         model(init_model())
-
+    elif args.input_data == 'non-voc':
+        print("load non voc image")
+        ds, imgs_path = _load_image_from_folder()
+        num_classes = pascal_custom.non_voc_txts().num_classes
+        model = FasterRCNN(is_training=False)
+        model(init_model())
     else:
         raise NameError("Please define input images with voc07_test or demo.")
-    if args.input_data != 'custom':
+    if args.input_data not in ['custom', 'non-voc']:
         model.load_weights(_get_weight_path())
     else:
         model.load_weights(_get_weight_path(name='faster_rcnn_custom.h5'))
@@ -162,7 +167,7 @@ if __name__ == '__main__':
             custom_test_ds = pascal_custom.pascal_voc(is_training=False, use_diff=False)
             view(imgs_path[i], bboxes, labels=labels, scores=probs,
                  pop_up=args.unpop, save=args.save, label_tuple=custom_test_ds._classes)
-        elif args.input_data == 'non_voc':
+        elif args.input_data == 'non-voc':
             from data import pascal_custom
             custom_test_ds = pascal_custom.non_voc_txts(is_training=False, use_diff=False)
             view(imgs_path[i], bboxes, labels=labels, scores=probs,
