@@ -266,7 +266,154 @@ class pascal_voc(Dataset):
         #     img_input['difficult'] = roidb['difficult']
             
         return img_input
-            
+
+
+class non_voc_txts(pascal_voc):
+    def __init__(self, cls_dir_name='salad', cls_name='salad_cls.txt', is_training=True, use_diff=False):
+        self.is_training = is_training
+        self.root_path = os.path.dirname(os.path.abspath(__file__))
+        # self.data_path = os.path.join(self.root_path, 'VOCdevkit', 'VOC2007')
+
+        self.cls_dir_name = cls_dir_name
+        self.dir_name = cls_dir_name
+
+        self.data_path = os.path.join(self.root_path)
+        self.txt_path = os.path.join(self.root_path, cls_dir_name)
+        self.cls_path = os.path.join(self.root_path, cls_dir_name, cls_name)
+        self._classes = ['__background__']
+        with open(self.cls_path) as f:
+            for x in f.readlines():
+                self._classes.append(x.strip('\n'))
+        self._classes = tuple(self._classes)
+        # self._classes = ('__background__',  # always index 0
+        #                 'aeroplane', 'bicycle', 'bird', 'boat',
+        #                 'bottle', 'bus', 'car', 'cat', 'chair',
+        #                 'cow', 'diningtable', 'dog', 'horse',
+        #                 'motorbike', 'person', 'pottedplant',
+        #                 'sheep', 'sofa', 'train', 'tvmonitor')
+        self.num_classes = len(self._classes)
+        # self.image_set_index = self._load_image_set_index()
+        self.image_set_index = self._automatically_generate_image_index(txt_prefix = 'salad_')
+        self.use_diff = use_diff
+        if self.is_training:
+            self.is_shuffle = cfg.shuffle
+            # set the dataset with flipped here
+            self.gt_roidb, self.data_size = self._data_enhance()
+        else:
+            self.is_shuffle = False
+            self.gt_roidb, self.data_size= self._get_gt_roidb()
+    def _automatically_generate_image_index(self, txt_prefix = 'salad_'):
+        # if self.is_training:
+        #     # use trainval set to train
+        #     image_dir = os.path.join(self.data_path, 'train')
+        # else:
+        #     image_dir = os.path.join(self.data_path, 'test')
+        # files = os.listdir(image_dir)
+        # image_index = []
+        # for each_file_name in files:
+        #     if each_file_name.endswith('.jpg'):
+        #         image_index.append(each_file_name.rstrip(".jpg"))
+        if self.is_training:
+            # use trainval set to train
+            image_text = os.path.join(self.txt_path, txt_prefix+'train.txt')
+        else:
+            image_text = os.path.join(self.txt_path, txt_prefix+'test.txt')
+        with open(image_text) as f:
+            image_index = [x.split(' ')[0] for x in f.readlines()]
+        return image_index
+    def _get_gt_roidb(self):
+        """
+        Construct gt_roidb from dataset for future use.
+        Prefer save to cache for faster reuse(~0.07s), regenerate gt_roidb will cost ~2s.
+        """
+        save_to_cache = True
+        if save_to_cache:
+            cache_path = os.path.join(self.root_path, 'cache')
+            if not os.path.exists(cache_path):
+                os.makedirs(cache_path)
+            if self.is_training:
+                if self.use_diff:
+                    cache_pkl = os.path.join(cache_path, self.dir_name + '_train' + '_diff' + '_gt_roidb.pkl')
+                else:
+                    cache_pkl = os.path.join(cache_path, self.dir_name + '_train' + '_gt_roidb.pkl')
+            else:
+                if self.use_diff:
+                    cache_pkl = os.path.join(cache_path, self.dir_name + '_test' + '_diff' + '_gt_roidb.pkl')
+                else:
+                    cache_pkl = os.path.join(cache_path, self.dir_name + '_test' + '_gt_roidb.pkl')
+
+            if not os.path.exists(cache_pkl):
+                # gt_roidb = [self._load_pascal_annotation(i) for i in self.image_set_index]
+                gt_roidb = self.load_annotation_from_txt()
+                with open(cache_pkl, 'wb') as f:
+                    pickle.dump(gt_roidb, f, pickle.HIGHEST_PROTOCOL)
+                print("wrote gt_roidb to cache at {}".format(cache_pkl))
+            else:
+                with open(cache_pkl, 'rb') as f:
+                    gt_roidb = pickle.load(f)
+                print("loaded gt_roidb from {}".format(cache_pkl))
+        else:
+            # gt_roidb = [self._load_pascal_annotation(i) for i in self.image_set_index]
+            gt_roidb = self.load_annotation_from_txt()
+        return gt_roidb, len(gt_roidb)
+
+    def image_path_from_txt_index(self, index:str):
+        if not index.endswith('.jpg'):
+            image_path = os.path.join(self.data_path, index + '.jpg')
+        else:
+            image_path = os.path.join(self.data_path, index)
+        image_path = os.path.abspath(image_path)
+        assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
+        return image_path
+
+    def _record_read_helper(self, record):
+        file_name, rest = record.split(' ', 1)
+        file_name = self.image_path_from_txt_index(file_name)
+        w, h, d = 640, 640, 3
+        img_size = np.array([h, w, d])
+        objs = rest.split(' ')
+
+        num_objs = len(objs)
+
+        boxes = np.zeros((num_objs, 4), dtype=np.float32)
+        gt_classes = np.zeros((num_objs), dtype=np.int32)
+        overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
+        seg_areas = np.zeros((num_objs), dtype=np.float32)
+        difficult = np.zeros((num_objs), dtype=np.int32)
+
+        for ix, obj in enumerate(objs):
+            digits = obj.split(',')
+            x1, y1, x2, y2, cls_idx = digits
+            x1, y1, x2, y2, cls_idx = float(x1), float(y1), float(x2), float(y2), int(cls_idx)
+            boxes[ix, :] = [x1, y1, x2, y2]
+            gt_classes[ix] = cls_idx
+            overlaps[ix, cls_idx] = 1.0
+            seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
+            difficult[ix] = 0
+
+        overlaps = scipy.sparse.csr_matrix(overlaps)
+
+        return {'image_path': file_name,
+                'img_size': img_size,
+                'boxes': boxes,
+                'gt_classes': gt_classes,
+                'gt_overlaps': overlaps,
+                'flipped': False,
+                'seg_areas': seg_areas,
+                'difficult': difficult}
+
+    def load_annotation_from_txt(self, txt_prefix='salad_'):
+        gt_roidb = []
+        if self.is_training:
+            txt_name = os.path.join(self.txt_path, txt_prefix+'train.txt')
+        else:
+            txt_name = os.path.join(self.txt_path, txt_prefix+'test.txt')
+        with open(txt_name) as f:
+            for record in f.readlines():
+                record_dict = self._record_read_helper(record)
+                gt_roidb.append(record_dict)
+        return gt_roidb
+
 
 if __name__ == '__main__':
 
