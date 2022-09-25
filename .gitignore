@@ -12,6 +12,7 @@
 /data/*.zip
 **/data/VOC*/*
 **/data/jpgs/*
+**/data/salad/*
 **/data/chess_voc/*
 **/data/cache/*
 **/tools/demo.jpg
