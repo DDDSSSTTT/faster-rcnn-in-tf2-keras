@@ -20,8 +20,6 @@ def anchor_to_target(h, w, num_anchors, gt_boxes, anchors, img_size):
     - rpn_labels: np.int, labels of anchors, (positive=1, negative=0, ignore=-1), shape=(n, h, w, num_anchors, 1)
     - rpn_bbox_targets: np.float, shape=(n, h, w, num_anchors, 4)
     """
-
-    print("Eagerly", tf.executing_eagerly())
     img_h, img_w = img_size.numpy()
     # img_h2, img_w2 = tf.make_ndarray(img_size)
     gt_boxes = gt_boxes.numpy()
